@@ -1,0 +1,126 @@
+// Odwracanie zawartoœci listy jednokierunkowej
+// Data: 20.02.2012
+// (C)2012 mgr Jerzy Wa³aszek
+//---------------------------------------------
+
+program slist_reverse;
+
+// Typ elementów listy
+//--------------------
+type
+  PslistEl = ^slistEl;
+
+  slistEl =  record
+    next  : PslistEl;
+    data  : char;
+  end;
+
+// Definicja typu obiektowego slist
+//---------------------------------
+
+  slist = object
+    public
+      head : PslistEl;  // pocz¹tek listy
+
+      constructor init;
+      destructor destroy;
+      procedure printl;
+      procedure push_front(v : char);
+      procedure pop_front;
+      procedure reverse;
+  end;
+
+//---------------------
+// Metody obiektu slist
+//---------------------
+
+// Konstruktor - inicjuje pole head
+//---------------------------------
+constructor slist.init;
+begin
+  head := nil;
+end;
+
+// Destruktor - usuwa listê z pamiêci
+//-----------------------------------
+destructor slist.destroy;
+begin
+  while head <> nil do pop_front;
+end;
+
+// Procedura wyœwietla zawartoœæ elementów listy
+//----------------------------------------------
+procedure slist.printl;
+var
+  p : PslistEl;
+begin
+  p := head;
+  while p <> nil do
+  begin
+    write(p^.data);
+    p := p^.next;
+  end;
+  writeln;
+end;
+
+// Procedura do³¹czania na pocz¹tek listy
+//---------------------------------------
+procedure slist.push_front(v : char);
+var
+  p : PslistEl;
+begin
+  new(p);
+  p^.next := head;
+  p^.data := v;
+  head    := p;
+end;
+
+// Procedura usuwa pierwszy element
+//---------------------------------
+procedure slist.pop_front;
+var
+  p : PslistEl;
+begin
+  p := head;
+  if p <> nil then
+  begin
+    head := p^.next;
+    dispose(p);
+  end;
+end;
+
+// Odwraca kolejnoœæ elementów listy
+//----------------------------------
+procedure slist.reverse();
+var
+  p,pc : PslistEl;
+begin
+  if head <> nil then
+  begin
+    pc := head;
+    while pc^.next <> nil do
+    begin
+      p := pc^.next;
+      pc^.next := p^.next;
+      p^.next := head;
+      head := p;
+    end;
+  end;
+end;
+
+//---------------
+// Program g³ówny
+//---------------
+
+var
+  L : slist;    // obiekt listy jednokierunkowej
+  i : integer;
+begin
+  L.init;       // inicjujemy obiekt
+
+  for i := 25 downto 0 do L.push_front(char(65 + i));
+  L.printl;
+  L.reverse;
+  L.printl;
+  L.destroy;
+end. 
