@@ -1,0 +1,65 @@
+// Sortowanie przez wstawianie z list¹ jednokierunkow¹
+// Data: 21.08.2012
+// (C)2012 mgr Jerzy Wa³aszek
+//---------------------------------------------
+
+program listinsort;
+
+type                                 // typ elementu listy jednokierunkowej
+  PslistEl = ^slistEl;
+  slistEl =  record
+    next  : PslistEl;
+    data  : integer;
+  end;
+
+var
+  L   : PslistEl;                    // wskaŸnik pocz¹tku listy
+  e,p : PslistEl;                    // wskaŸniki elementów listy
+  n   : integer;                     // liczba elementów do posortowania
+  v   : integer;                     // wartoœæ elementu
+  i   : integer;                     // licznik elementów
+
+begin
+  new(L);                            // tworzymy pierwszego stra¿nika
+  new(L^.next);                      // tworzymy drugiego stra¿nika
+  L^.next^.next := nil;              // drugi stra¿nik jest ostatni na liœcie
+  L^.next^.data := MAXINT;           // wartoœæ drugiego stra¿nika
+
+  read(n);                           // odczytujemy liczbê elementów
+
+  for i := 1 to n do
+  begin
+
+    read(v);                         // czytamy element
+
+    p := L;                          // p ustawiamy na pierwszego stra¿nika
+
+    while v > p^.next^.data do       // szukamy miejsca wstawienia
+      p := p^.next;
+
+    new(e);                          // tworzymy nowy element
+
+    e^.data := v;                    // inicjujemy element
+    e^.next := p^.next;
+
+    p^.next := e;                    // element wstawiamy do listy L
+
+  end;
+
+  p := L^.next;                      // listê przesy³amy na wyjœcie
+
+  while p^.next <> nil do
+  begin
+    write(p^.data,' ');
+    p := p^.next;
+  end;
+
+  writeln;
+
+  while L <> nil do                  // usuwamy listê z pamiêci
+  begin
+    e := L;
+    L := L^.next;
+    dispose(e);
+  end;
+end.
