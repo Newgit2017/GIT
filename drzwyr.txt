@@ -1,0 +1,201 @@
+// Tworzenie drzewa wyra¿eñ
+// Data: 11.05.2013
+// (C)2013 mgr Jerzy Wa³aszek
+//------------------------------
+
+program e_tree;
+
+// Typ wêz³ów drzewa
+//------------------
+type
+  PBTNode = ^BTNode;
+  BTNode  = record
+    left,right : PBTNode;
+    data   : char;
+  end;
+
+const S_MAX = 100; // rozmiar dla stosów
+
+// Zmienne globalne
+//-----------------
+var
+  cr,cl,cp : string; // ³añcuchy do znaków ramek
+
+// Zwraca priorytet operatora dla ONP
+//-----------------------------------
+function p(c : char) : integer;
+begin
+  case c of
+   '('     : p := 0;
+   '+','-' : p := 1;
+   '*','/' : p := 2;
+   '^'     : p := 3;
+   end;
+end;
+
+// Funkcja przekszta³ca wyra¿enie arytmetyczne e na ONP
+//-----------------------------------------------------
+function ONP(e : string) : string;
+var
+  S  : array[0..S_MAX-1] of char;    // Stos operatorów
+  sp : integer;                      // WskaŸnik stosu
+  t  : string;                       // Wynik
+  i  : integer;
+
+begin
+  sp := 0;                            // Inicjujemy stos
+  t  := '';                           // Zerujemy wynik
+
+  for i := 1 to length(e) do
+    case e[i] of                     // Analizujemy znak
+    ' ' : ;                          // Spacjê ignorujemy
+    '(' : begin                      // Nawias otwieraj¹cy zawsze na stos
+            S[sp] := '(';
+            inc(sp);
+          end;
+    ')' : begin                      // Nawias zamykaj¹cy
+            while S[sp-1] <> '(' do
+            begin
+              dec(sp);               // Ze stosu przesy³amy na wyjœcie
+              t := t + S[sp];        // wszystkie operatory a¿ do nawiasu otw.
+              write(S[sp],' ');      // Echo na ekran
+            end;
+            dec(sp);                 // Usuwamy ze stosu nawias otwieraj¹cy
+          end;
+    '+','-','*','/','^' :            // Operator
+          begin
+            while sp > 0 do
+            begin
+              if (p(e[i]) = 3) or (p(e[i]) > p(S[sp - 1])) then break;
+              dec(sp);               // Na wyjœcie przesy³amy ze stosu wszystkie
+              t := t + S[sp];        // operatory o wy¿szych priorytetach
+              write(S[sp],' ');      // Echo na ekran
+            end;
+            S[sp] := e[i];           // Operator umieszczamy na stosie
+            inc(sp);
+          end;
+    else
+      begin
+        t := t + e[i];               // Inaczej znak przesy³amy na wyjœcie
+        write(e[i],' ');             // Echo na ekran
+      end;
+    end;
+
+  while sp > 0 do                    // Jeœli stos coœ zawiera,
+  begin
+    dec(sp);                         // to na wyjœcie przesy³amy
+    t := t + S[sp];                  // ca³¹ zawartoœæ stosu
+    write(S[sp],' ');                // Echo na ekran
+  end;
+
+  writeln; writeln;
+
+  ONP := t;
+end;
+
+// Funkcja zwraca adres korzenia drzewa wyra¿eñ,
+// które zostaje utworzone na podstawie wyra¿enia e
+//-------------------------------------------------
+function etree(e : string) : PBTNode;
+var
+  S  : array[0..S_MAX-1] of PBTNode; // Stos
+  sp : integer;                      // WskaŸnik stosu
+  v  : PBTNode;                      // Adres wêz³a
+  i  : integer;                      // Indeks
+
+begin
+  sp := 0;                           // Zerujemy stos
+
+  for i := 1 to length(e) do         // Przetwarzamy wyra¿enie ONP
+  begin
+    new(v);                          // Tworzymy nowy wêze³
+
+    v^.data := e[i];                 // Umieszczamy w nim element wyra¿enia
+
+    if e[i] in ['+','-','*','/','^'] then
+    begin                            // Operator
+      v^.right := S[sp - 1];         // Pobieramy ze stosu wêz³y i czynimy je
+      v^.left  := S[sp - 2];         // synami wêz³a
+      dec(sp,2);
+    end
+    else
+    begin                            // Argument
+      v^.left  := nil;               // Liœæ, nie ma synów
+      v^.right := nil;
+    end;
+
+    S[sp] := v;                      // Wêze³ umieszczamy na stosie
+    inc(sp);
+  end;
+
+  etree := S[sp - 1];                // Zwracamy adres korzenia
+end;
+
+// Procedura DFS:postorder usuwaj¹ca drzewo
+//-----------------------------------------
+procedure DFSRelease(v : PBTNode);
+begin
+  if v <> nil then
+  begin
+    DFSRelease(v^.left);   // usuwamy lewe poddrzewo
+    DFSRelease(v^.right);  // usuwamy prawe poddrzewo
+    dispose(v);            // usuwamy sam wêze³
+  end;
+end;
+
+// Procedura wypisuje drzewo
+//--------------------------
+procedure printBT(sp,sn : string; v : PBTNode);
+var
+  s : string;
+begin
+  if v <> nil then
+  begin
+    s := sp;
+    if sn = cr then s[length(s) - 1] := ' ';
+    printBT(s+cp,cr,v^.right);
+
+    s := Copy(sp,1,length(sp)-2);
+    writeln(s,sn,v^.data);
+
+    s := sp;
+    if sn = cl then s[length(s) - 1] := ' ';
+    printBT(s+cp,cl,v^.left);
+  end;
+end;
+
+//**********************
+//*** PROGRAM G£ÓWNY ***
+//**********************
+
+var
+  e : string;                        // Wyra¿enie
+  root : PBTNode;                    // Korzeñ drzewa
+begin
+
+  // Ustawiamy ³añcuchy znakowe, poniewa¿ nie wszystkie edytory pozwalaj¹
+  // wstawiaæ znaki konsoli do tworzenia ramek.
+  // cr = +--
+  //      |
+
+  // cl = |
+  //      +--
+
+  // cp = |
+  //      |
+
+  cr := #218#196;
+  cl := #192#196;
+  cp := #179#32;
+
+  readln(e);                         // Czytamy wyra¿enie
+
+  writeln;
+
+  root := etree(ONP(e));             // Tworzymy drzewo wyra¿eñ
+
+  printBT('','',root);               // Wyœwietlamy drzewo
+
+  DFSRelease(root);                  // Usuwamy drzewo z pamiêci
+
+end.
