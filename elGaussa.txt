@@ -1,0 +1,87 @@
+// Eliminacja Gaussa
+// Data: 15.02.2010
+// (C)2012 mgr Jerzy Wa³aszek
+//-----------------------------
+
+program gauss;
+
+type
+  NReal = array of double; // typ tablic wierszy
+  MReal = array of NReal;  // typ tablicy wskaŸników
+
+const
+
+  eps = 1e-12;             // sta³a przybli¿enia zera
+
+// Funkcja realizuje algorytm eliminacji Gaussa
+//---------------------------------------------
+function gauss(n : integer; var AB : MReal; var X : NReal) : boolean;
+var
+  i,j,k : integer;
+  m,s   : double;
+begin
+  // eliminacja wspó³czynników
+
+  for i := 0 to n - 2 do
+  begin
+    for j := i + 1 to n - 1 do
+    begin
+      if abs(AB[i][i]) < eps then exit(false);
+      m := -AB[j][i] / AB[i][i];
+      for k := i + 1 to n do
+        AB[j][k] := AB[j][k] + m * AB[i][k];
+    end;
+  end;
+
+  // wyliczanie niewiadomych
+
+  for i := n - 1 downto 0 do
+  begin
+    s := AB[i][n];
+    for j := n - 1 downto i + 1 do
+      s := s - AB[i][j] * X[j];
+    if abs(AB[i][i]) < eps then exit(false);
+    X[i] := s / AB[i][i];
+  end;
+  gauss := true;
+end;
+
+// Program g³ówny
+//---------------
+
+var
+  AB    : MReal;
+  X     : NReal;
+  n,i,j : integer;
+begin
+  // odczytujemy liczbê niewiadomych
+
+  read(n);
+
+  // tworzymy macierze AB i X
+
+  SetLength(AB,n);
+  SetLength(X,n);
+
+  for i := 0 to n - 1 do SetLength(AB[i],n + 1);
+
+  // odczytujemy dane dla macierzy AB
+
+  for i := 0 to n - 1 do
+    for j := 0 to n  do read(AB[i][j]);
+
+  if gauss(n,AB,X) then
+  begin
+    for i := 0 to n - 1 do
+      writeln('x',i + 1,' = ',X[i]:9:4);
+  end
+  else
+    writeln('DZIELNIK ZERO');
+
+  // usuwamy macierze z pamiêci
+
+  for i := 0 to n - 1 do SetLength(AB[i],0);
+  SetLength(AB,0);
+  SetLength(X,0);
+
+end.
