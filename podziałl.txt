@@ -1,0 +1,167 @@
+// Podzia³ listy jednokierunkowej na dwie podlisty
+// Data: 25.02.2012
+// (C)2012 mgr Jerzy Wa³aszek
+//------------------------------------------------
+
+program slist_split;
+
+// Typ elementów listy
+//--------------------
+type
+  PslistEl = ^slistEl;
+
+  slistEl =  record
+    next  : PslistEl;
+    data  : char;
+  end;
+
+// Definicja typu obiektowego slist
+//---------------------------------
+
+  slist = object
+    public
+      head : PslistEl;  // pocz¹tek listy
+
+      constructor init;
+      destructor destroy;
+      function   size : cardinal;
+      procedure  printl;
+      procedure  push_front(v : char);
+      procedure  pop_front;
+      procedure  split(var l1,l2 : slist);
+  end;
+
+//---------------------
+// Metody obiektu slist
+//---------------------
+
+// Konstruktor - inicjuje pole head
+//---------------------------------
+constructor slist.init;
+begin
+  head := nil;
+end;
+
+// Destruktor - usuwa listê z pamiêci
+//-----------------------------------
+destructor slist.destroy;
+begin
+  while head <> nil do pop_front;
+end;
+
+// Funkcja oblicza liczbê elementów listy
+//---------------------------------------
+function slist.size : cardinal;
+var
+  c : cardinal;
+  p : PslistEl;
+begin
+  c := 0;
+  p := head;
+  while p <> nil do
+  begin
+    inc(c);
+    p := p^.next;
+  end;
+  size := c;
+end;
+
+// Procedura wyœwietla zawartoœæ elementów listy
+//----------------------------------------------
+procedure slist.printl;
+var
+  p : PslistEl;
+begin
+  write(size,' : ');
+  p := head;
+  while p <> nil do
+  begin
+    write(p^.data,' ');
+    p := p^.next;
+  end;
+  writeln;
+end;
+
+// Procedura do³¹czania na pocz¹tek listy
+//---------------------------------------
+procedure slist.push_front(v : char);
+var
+  p : PslistEl;
+begin
+  new(p);
+  p^.next := head;
+  p^.data := v;
+  head    := p;
+end;
+
+// Procedura usuwa pierwszy element
+//---------------------------------
+procedure slist.pop_front;
+var
+  p : PslistEl;
+begin
+  p := head;
+  if p <> nil then
+  begin
+    head := p^.next;
+    dispose(p);
+  end;
+end;
+
+// Dokonuje podzia³u listy
+//------------------------
+procedure slist.split(var l1,l2 : slist);
+var
+  p1,p2 : PslistEl;
+  s : boolean;
+begin
+  s := false;
+  l1.push_front(#0);
+  l2.push_front(#0);
+  p1 := l1.head;
+  p2 := l2.head;
+  while head <> nil do
+  begin
+    if s then
+    begin
+      p2^.next := head;
+      p2 := p2^.next;
+    end
+    else
+    begin
+      p1^.next := head;
+      p1 := p1^.next;
+    end;
+    head := head^.next;
+    s := not s;
+  end;
+  p1^.next := nil;
+  p2^.next := nil;
+  l1.pop_front();
+  l2.pop_front();
+end;
+
+//---------------
+// Program g³ówny
+//---------------
+
+var
+  L,L1,L2 : slist;  // obiekty list jednokierunkowych
+  i : char;
+
+begin
+  L.init;           // inicjujemy obiekty
+  L1.init;
+  L2.init;
+
+  for i := 'Z' downto 'A' do L.push_front(i);
+  L.printl;
+  writeln;
+
+  L.split(L1,L2);   // dzielimy L, wynik w L1 i L2
+  L1.printl;        // wyœwietlamy L1
+  L2.printl;        // wyœwietlamy L2
+
+  L1.destroy;       // usuwamy listy z pamiêci
+  L2.destroy;
+end.
